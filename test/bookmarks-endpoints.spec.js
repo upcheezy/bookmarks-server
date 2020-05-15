@@ -31,28 +31,40 @@ describe('Bookmarks Endpoints', () => {
     it(`responds with 401 Unauthorized for GET /bookmarks`, () => {
       return supertest(app)
         .get('/bookmarks')
-        .expect(401, { error: 'Unauthorized request' })
+        .expect(401, {
+          error: 'Unauthorized request'
+        })
     })
 
     it(`responds with 401 Unauthorized for POST /bookmarks`, () => {
       return supertest(app)
         .post('/bookmarks')
-        .send({ title: 'test-title', url: 'http://some.thing.com', rating: 1 })
-        .expect(401, { error: 'Unauthorized request' })
+        .send({
+          title: 'test-title',
+          url: 'http://some.thing.com',
+          rating: 1
+        })
+        .expect(401, {
+          error: 'Unauthorized request'
+        })
     })
 
     it(`responds with 401 Unauthorized for GET /bookmarks/:id`, () => {
       const secondBookmark = testBookmarks[1]
       return supertest(app)
         .get(`/bookmarks/${secondBookmark.id}`)
-        .expect(401, { error: 'Unauthorized request' })
+        .expect(401, {
+          error: 'Unauthorized request'
+        })
     })
 
     it(`responds with 401 Unauthorized for DELETE /bookmarks/:id`, () => {
       const aBookmark = testBookmarks[1]
       return supertest(app)
         .delete(`/bookmarks/${aBookmark.id}`)
-        .expect(401, { error: 'Unauthorized request' })
+        .expect(401, {
+          error: 'Unauthorized request'
+        })
     })
   })
 
@@ -84,7 +96,10 @@ describe('Bookmarks Endpoints', () => {
     })
 
     context(`Given an XSS attack bookmark`, () => {
-      const { maliciousBookmark, expectedBookmark } = fixtures.makeMaliciousBookmark()
+      const {
+        maliciousBookmark,
+        expectedBookmark
+      } = fixtures.makeMaliciousBookmark()
 
       beforeEach('insert malicious bookmark', () => {
         return db
@@ -112,7 +127,9 @@ describe('Bookmarks Endpoints', () => {
           .get(`/bookmarks/123`)
           .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
           .expect(404, {
-            error: { message: `Bookmark Not Found` }
+            error: {
+              message: `Bookmark Not Found`
+            }
           })
       })
     })
@@ -137,7 +154,10 @@ describe('Bookmarks Endpoints', () => {
     })
 
     context(`Given an XSS attack bookmark`, () => {
-      const { maliciousBookmark, expectedBookmark } = fixtures.makeMaliciousBookmark()
+      const {
+        maliciousBookmark,
+        expectedBookmark
+      } = fixtures.makeMaliciousBookmark()
 
       beforeEach('insert malicious bookmark', () => {
         return db
@@ -165,7 +185,9 @@ describe('Bookmarks Endpoints', () => {
           .delete(`/bookmarks/123`)
           .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
           .expect(404, {
-            error: { message: `Bookmark Not Found` }
+            error: {
+              message: `Bookmark Not Found`
+            }
           })
       })
     })
@@ -188,9 +210,9 @@ describe('Bookmarks Endpoints', () => {
           .expect(204)
           .then(() =>
             supertest(app)
-              .get(`/bookmarks`)
-              .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-              .expect(expectedBookmarks)
+            .get(`/bookmarks`)
+            .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+            .expect(expectedBookmarks)
           )
       })
     })
@@ -283,14 +305,17 @@ describe('Bookmarks Endpoints', () => {
         })
         .then(res =>
           supertest(app)
-            .get(`/bookmarks/${res.body.id}`)
-            .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-            .expect(res.body)
+          .get(`/bookmarks/${res.body.id}`)
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(res.body)
         )
     })
 
     it('removes XSS attack content from response', () => {
-      const { maliciousBookmark, expectedBookmark } = fixtures.makeMaliciousBookmark()
+      const {
+        maliciousBookmark,
+        expectedBookmark
+      } = fixtures.makeMaliciousBookmark()
       return supertest(app)
         .post(`/bookmarks`)
         .send(maliciousBookmark)
@@ -300,6 +325,31 @@ describe('Bookmarks Endpoints', () => {
           expect(res.body.title).to.eql(expectedBookmark.title)
           expect(res.body.description).to.eql(expectedBookmark.description)
         })
+    })
+
+    describe(`PATCH bookmarks/:bookmark_id`, () => {
+      context(`Given no articles`, () => {
+        it(`responds with 404`, () => {
+          const bookmarkId = 123456;
+          return supertest(app)
+            .delete(`bookmarks/${bookmarkId}`)
+            .expect(404, {
+              error: {
+                message: `Article doesn't exist`
+              }
+            })
+        })
+      })
+
+      context('Given there are articles in the dataase', () => {
+        const bookmarksArray = fixtures.makeBookmarksArray;
+
+        beforeEach('insert articles', () => {
+          return db
+            .into('bookmarks')
+            .insert(bookmarksArray)
+        })
+      })
     })
   })
 })
