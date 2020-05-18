@@ -18,7 +18,7 @@ const serializeBookmark = bookmark => ({
 })
 
 bookmarksRouter
-  .route('/bookmarks')
+  .route('/api/bookmarks')
   .get((req, res, next) => {
     BookarksService.getAllBookmarks(req.app.get('db'))
       .then(bookmarks => {
@@ -66,14 +66,14 @@ bookmarksRouter
         logger.info(`Card with id ${bookmark.id} created.`)
         res
           .status(201)
-          .location(`/bookmarks/${bookmark.id}`)
+          .location(`/api/bookmarks/${bookmark.id}`)
           .json(serializeBookmark(bookmark))
       })
       .catch(next)
   })
 
 bookmarksRouter
-  .route('/bookmarks/:bookmark_id')
+  .route('/api/bookmarks/:bookmark_id')
   .all((req, res, next) => {
     const {
       bookmark_id
@@ -98,10 +98,10 @@ bookmarksRouter
     res.json(serializeBookmark(res.bookmark))
   })
   .delete((req, res, next) => {
-    // TODO: update to use db
     const {
       bookmark_id
     } = req.params
+    console.log(bookmark_id);
     BookarksService.deleteBookmark(
         req.app.get('db'),
         bookmark_id
@@ -134,6 +134,16 @@ bookmarksRouter
           message: `Request body must content either 'title', 'style', or 'content'`
         }
       })
+
+    BookarksService.updateBookmark(
+        req.app.get('db'),
+        req.params.bookmark_id,
+        bookmarkToUpdate
+      )
+      .then(numRowsAffected => {
+        res.status(204).end()
+      })
+      .catch(next)
   })
 
 module.exports = bookmarksRouter
